@@ -2508,6 +2508,21 @@ def normalise_jcr_quartile(record: dict[str, Any]) -> str:
     return "未分区或缺失"
 
 
+def _five_year_trend_fields(slope: float, standard_error: float) -> dict[str, float]:
+    if not np.isfinite(slope):
+        values = np.full(3, np.nan)
+    else:
+        offsets = np.asarray([0.0, -1.96, 1.96]) * standard_error
+        offsets[0] = 0.0
+        with np.errstate(over="ignore", under="ignore", invalid="ignore"):
+            values = np.exp(5.0 * (slope + offsets))
+    return {
+        "trend_odds_ratio_per_5_years": float(values[0]),
+        "trend_or_per_5_years_ci95_low": float(values[1]),
+        "trend_or_per_5_years_ci95_high": float(values[2]),
+    }
+
+
 def fit_annual_binomial_trend(
     years: np.ndarray, counts: np.ndarray, totals: np.ndarray
 ) -> dict[str, float]:
@@ -2523,6 +2538,7 @@ def fit_annual_binomial_trend(
         or np.all(count >= total)
     ):
         return {
+            **_five_year_trend_fields(np.nan, np.nan),
             "trend_log_odds_per_year": np.nan,
             "trend_se_log_odds_per_year": np.nan,
             "trend_odds_ratio_per_year": np.nan,
@@ -2545,6 +2561,7 @@ def fit_annual_binomial_trend(
             update = np.linalg.solve(hessian, score)
         except np.linalg.LinAlgError:
             return {
+                **_five_year_trend_fields(np.nan, np.nan),
                 "trend_log_odds_per_year": np.nan,
                 "trend_se_log_odds_per_year": np.nan,
                 "trend_odds_ratio_per_year": np.nan,
@@ -2574,6 +2591,7 @@ def fit_annual_binomial_trend(
     )
     p_value = float(2 * stats.norm.sf(abs(z_value))) if np.isfinite(z_value) else np.nan
     return {
+        **_five_year_trend_fields(slope, standard_error),
         "trend_log_odds_per_year": slope,
         "trend_se_log_odds_per_year": standard_error,
         "trend_odds_ratio_per_year": float(math.exp(np.clip(slope, -30, 30))),
@@ -3865,6 +3883,9 @@ def formal_community_discussion_screen(
         "trend_odds_ratio_per_year",
         "trend_or_ci95_low",
         "trend_or_ci95_high",
+        "trend_odds_ratio_per_5_years",
+        "trend_or_per_5_years_ci95_low",
+        "trend_or_per_5_years_ci95_high",
         "q_BY_publication_trend",
         "Kleinberg_burst_strength",
         "q_BY_recent_burst",

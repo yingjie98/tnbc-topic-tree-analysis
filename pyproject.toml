@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "topic-tree-table-analysis"
-version = "1.0.0"
+version = "1.0.1"
 description = "Table-only analysis of literature topic trees, semantic reliability, PMID structures and temporal patterns"
 requires-python = ">=3.10"
 dependencies = ["numpy>=1.26,<3", "pandas>=2.1,<3", "scipy>=1.12,<2", "scikit-learn>=1.5,<2", "igraph>=0.11,<2", "leidenalg>=0.10,<1", "threadpoolctl>=3.1,<4", "openpyxl>=3.1,<4", "openai>=1.40,<3"]

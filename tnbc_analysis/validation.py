@@ -291,12 +291,9 @@ def analyze(path, output, permutations=19999, resamples=4999):
     means = []
     for major, metric in METRICS.items():
         task = "edge" if major == 3 else "paper"
-        base = frame[frame.metric.eq(metric)]
+        base = common_frame(frame, metric)
         for rater in ("AI", "E1", "E2"):
-            f = base[base[rater].notna()].copy()
-            if task == "edge":
-                common = f.groupby("level").condition.nunique()
-                f = f[f.level.isin(common[common == 2].index)]
+            f = base.copy()
             if f.empty or f.condition.nunique() < 2:
                 continue
             e = compare_means(
@@ -313,7 +310,7 @@ def analyze(path, output, permutations=19999, resamples=4999):
                     **e,
                 }
             )
-        f = common_frame(frame, metric)
+        f = base
         if len(f):
             for left, right in [("AI", "E1"), ("AI", "E2"), ("E1", "E2")]:
                 pairs.append(
